@@ -16,7 +16,7 @@ import (
 var randomSource = rand.New(rand.NewSource(time.Now().Unix()))
 
 func main() {
-	dcSession, err := discordgo.New("Bot " + module.BotSetting.Token)
+	dcSession, err := discordgo.New("Bot " + module.BotConfiguration.Token)
 	if err != nil {
 		fmt.Println("Error: error appear when creating Discord session")
 		return
@@ -26,10 +26,10 @@ func main() {
 		if m.Author.ID == s.State.User.ID {
 			return
 		}
-		if v, ok := module.ChannelsSetting[m.ChannelID]; ok {
-			module.GetResponseSetting(v)
-			response := module.ResponseSettingMap[v]
-			if messages, ok := response.People[m.Author.ID]; ok {
+		if v, ok := module.ChannelsMapping[m.ChannelID]; ok {
+			module.GetResponseHandling(v)
+			response := module.ResponseHandlingMap[v]
+			if messages, ok := response.ByPeople[m.Author.ID]; ok {
 				var i int
 				if len(messages) >= 1 {
 					i = randomSource.Intn(len(messages))
@@ -38,7 +38,7 @@ func main() {
 				}
 				s.ChannelMessageSend(m.ChannelID, messages[i])
 			}
-			if messages, ok := response.KeyWord[m.Content]; ok {
+			if messages, ok := response.ByKeyword[m.Content]; ok {
 				var i int
 				if len(messages) >= 1 {
 					i = randomSource.Intn(len(messages))
@@ -55,7 +55,7 @@ func main() {
 		fmt.Println("Error: error appear when opening connection")
 		return
 	}
-	fmt.Println("Bot is now running. Press CTRL-C to exit.")
+	fmt.Println("Bot is now running. Press CTRL-C to reboot.")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT)
 	<-sc

@@ -5,51 +5,39 @@ import (
 	"path/filepath"
 )
 
-var CurrentWorkingDirectory Path = NewPath(os.Args[0]).Dir()
+var CurrentWorkingDirectory = Path(os.Args[0]).Dir()
 
-type Path struct {
-	path string	
+type Path string
+
+func (path Path) Abs() Path {
+	pathString, _ := filepath.Abs(string(path))
+	return Path(pathString)
 }
 
-func (p Path) Abs() Path {
-	p.path, _ = filepath.Abs(p.path)
-	return p
+func (path Path) Base() string {
+	return filepath.Base(string(path))
 }
 
-func (p Path) Base() string {
-	return filepath.Base(p.path)
+func (path Path) Dir() Path {
+	return Path(filepath.Dir(string(path)))
 }
 
-func (p Path) Dir() Path {
-	p.path = filepath.Dir(p.path)
-	return p
+func (path Path) Ext() string {
+	return filepath.Ext(string(path))
 }
 
-func (p Path) Ext() string {
-	return filepath.Ext(p.path)
-}
-
-func (p Path) IsExist() bool {
-	_, err := os.Stat(p.path)
+func (path Path) IsExist() bool {
+	_, err := os.Stat(string(path))
 	return !os.IsNotExist(err)
 }
 
-func (p Path) Join(element ...string) Path {
+func (path Path) Join(element ...string) Path {
 	tempPath := make([]string, len(element) + 1)
-	tempPath[0] = p.path
+	tempPath[0] = string(path)
     copy(tempPath[1:], element)
-	p.path = filepath.Join(tempPath...)
-	return p
+	return Path(filepath.Join(tempPath...))
 }
 
-func (p Path) ReadFile() ([]byte, error) {
-	return os.ReadFile(p.path)
-}
-
-func (p Path) String() string {
-	return p.path
-}
-
-func NewPath(path string) Path {
-	return Path{path}
+func (path Path) ReadFile() ([]byte, error) {
+	return os.ReadFile(string(path))
 }
