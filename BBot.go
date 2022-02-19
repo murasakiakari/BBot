@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -22,6 +23,8 @@ func main() {
 		return
 	}
 
+	peopleResponseRateLimitation := module.NewResponseRateLimitation()
+
 	dcSession.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if m.Author.ID == s.State.User.ID {
 			return
@@ -29,7 +32,7 @@ func main() {
 		if v, ok := module.ChannelsMapping[m.ChannelID]; ok {
 			module.GetResponseHandling(v)
 			response := module.ResponseHandlingMap[v]
-			if messages, ok := response.ByPeople[m.Author.ID]; ok {
+			if messages, ok := response.ByPeople[m.Author.ID]; ok && peopleResponseRateLimitation.Check(m.Author.ID) {
 				var i int
 				if len(messages) >= 1 {
 					i = randomSource.Intn(len(messages))
@@ -46,6 +49,19 @@ func main() {
 					i = 0
 				}
 				s.ChannelMessageSend(m.ChannelID, messages[i])
+			} else {
+				for k, messages := range response.ByKeyword {
+					if strings.Contains(strings.ToLower(m.Content), strings.ToLower(k)) {
+						var i int
+						if len(messages) >= 1 {
+							i = randomSource.Intn(len(messages))
+						} else {
+							i = 0
+						}
+						s.ChannelMessageSend(m.ChannelID, messages[i])
+						break
+					}
+				}
 			}
 		}
 	})

@@ -14,6 +14,7 @@ var (
 
 type BotConfigurationStruct struct {
 	Token string `yaml:"Token"`
+	ResponseRateLimit int64 `yaml:"ResponseRateLimit"`
 }
 
 type ResponseHandling struct {
